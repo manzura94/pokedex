@@ -13,7 +13,8 @@ const HomePage = () => {
     const hasMore = useSelector((state) => state.pokemon.hasMore);
     const offset = useSelector((state) => state.pokemon.offset);
 
-    const [typeQuery, setTypeQuery] = useState<string>('');
+    const [nameQuery, setNameQuery] = useState('');
+    const [typeQuery, setTypeQuery] = useState('all');
 
     useEffect(() => {
         dispatch(fetchPokemons(0));
@@ -33,15 +34,22 @@ const HomePage = () => {
         };
     }, [handleScroll]);
 
-    const filteredPokemons = typeQuery ? pokemons.filter((pokemon) => pokemon.types.some((type) => type.includes(typeQuery))) : pokemons;
+    const filteredPokemons = pokemons.filter((pokemon) => {
+        const matchesName = pokemon.name.toLowerCase().includes(nameQuery);
+        const matchesType = typeQuery === 'all' || (pokemon.types && pokemon.types.find((type) => type === typeQuery));
+        console.log(pokemon.types);
+        return matchesName && matchesType;
+    });
 
     return (
         <div>
-            <SearchBar typeQuery={typeQuery} setTypeQuery={setTypeQuery} />
-            <div className='flex flex-wrap justify-center gap-4 mt-4'>
-                {filteredPokemons.map((pokemon) => (
-                    <PokemonCard key={pokemon.name} name={pokemon.name} url={pokemon.url} sprites={pokemon.sprites} />
-                ))}
+            <SearchBar nameQuery={nameQuery} setNameQuery={setNameQuery} typeQuery={typeQuery} setTypeQuery={setTypeQuery} />
+            <div className='flex flex-wrap justify-between gap-5 max-w-[1200px] w-full'>
+                {filteredPokemons.length ? (
+                    filteredPokemons.map((pokemon) => <PokemonCard key={pokemon.name} name={pokemon.name} url={pokemon.url} sprites={pokemon.sprites} />)
+                ) : (
+                    <p>No results found</p>
+                )}
             </div>
             {loading && <p className='flex flex-wrap justify-center my-4 text-[22px] font-bold'>Loading...</p>}
         </div>
