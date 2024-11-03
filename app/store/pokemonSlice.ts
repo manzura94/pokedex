@@ -1,11 +1,16 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { PokemonProps } from '../components/HomePage';
 
 interface PokemonState {
-    list: any[];
-    favorites: any[];
+    list: [];
+    favorites: [];
     searchTerm: string;
     selectedType: string | null;
+    selectedItem: PokemonProps | null;
+    url: string;
+    id: string;
+    loading: boolean;
 }
 
 const initialState: PokemonState = {
@@ -13,18 +18,24 @@ const initialState: PokemonState = {
     favorites: [],
     searchTerm: '',
     selectedType: 'all',
+    selectedItem: null,
+    url: '',
+    id: '',
+    loading: true,
 };
-
 
 export const fetchPokemons = createAsyncThunk('pokemon/fetchPokemons', async (offset: number) => {
     const response = await axios.get(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=10`);
     const pokemonDetails = await Promise.all(
-        response.data.results.map(async (pokemon) => {
+        response.data.results.map(async (pokemon: PokemonState) => {
             const res = await axios.get(pokemon.url);
+            const id = Math.random();
+
             return {
+                id,
                 name: res.data.name,
                 sprites: res.data.sprites,
-                types: res.data.types.map((typeInfo) => typeInfo.type.name),
+                types: res.data.types.map((typeInfo: { type: { name: string } }) => typeInfo.type.name),
             };
         })
     );
@@ -32,18 +43,20 @@ export const fetchPokemons = createAsyncThunk('pokemon/fetchPokemons', async (of
     return pokemonDetails;
 });
 
-
 const pokemonSlice = createSlice({
     name: 'pokemon',
     initialState,
     reducers: {
-        setSearchTerm: (state, action: PayloadAction<string>) => {
+        setSearchTerm: (state: { searchTerm: string }, action: PayloadAction<string>) => {
             state.searchTerm = action.payload;
         },
-        setSelectedType: (state, action: PayloadAction<string | null>) => {
+        setSelectedType: (state: { selectedType: string }, action: PayloadAction<string | null>) => {
             state.selectedType = action.payload;
         },
-        addFavorite: (state, action: PayloadAction<any>) => {
+        setSelectedItem: (state: { selectedItem: string }, action: PayloadAction<string>) => {
+            state.selectedItem = action.payload;
+        },
+        addFavorite: (state: { favorites: string[] }, action: PayloadAction<any>) => {
             state.favorites.push(action.payload);
         },
         removeFavorite: (state, action: PayloadAction<number>) => {
@@ -52,33 +65,18 @@ const pokemonSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            .addCase(fetchPokemons.pending, (state) => {
+                state.loading = true;
+            })
             .addCase(fetchPokemons.fulfilled, (state, action) => {
                 state.loading = false;
                 state.list = [...state.list, ...action.payload];
             })
-            .addCase(fetchPokemons.pending, (state) => {
-                state.loading = true;
-            })
+
             .addCase(fetchPokemons.rejected, (state) => {
                 state.loading = false;
             });
     },
-    // extraReducers: (builder) => {
-    //     builder
-    //         .addCase(fetchPokemons.pending, (state) => {
-    //             state.loading = true;
-    //         })
-    //         .addCase(fetchPokemons.fulfilled, (state, action) => {
-    //             state.loading = false;
-    //             state.list = [...state.list, ...action.payload];
-    //             state.offset += action.payload.length;
-    //             state.hasMore = action.payload.length > 0;
-    //         })
-    //         .addCase(fetchPokemons.rejected, (state) => {
-    //             state.loading = false;
-    //             state.hasMore = false;
-    //         });
-    // },
 });
-export const { setSearchTerm, setSelectedType, addFavorite, removeFavorite } = pokemonSlice.actions;
+export const { setSearchTerm, setSelectedType, setSelectedItem, addFavorite, favorites, removeFavorite } = pokemonSlice.actions;
 export default pokemonSlice.reducer;
