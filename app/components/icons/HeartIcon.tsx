@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface Props {
-    isClicked: Boolean;
+    isClicked: boolean;
     handleLikeClick: (e: React.MouseEvent) => void;
 }
 
@@ -9,15 +9,17 @@ export const HeartIcon = ({ isClicked, handleLikeClick }: Props) => {
     return (
         <svg
             onClick={(e) => handleLikeClick(e)}
-            fill={isClicked ? '#c32d2d' : '#a8a8a8'}
             version='1.1'
             xmlns='http://www.w3.org/2000/svg'
             xmlnsXlink='http://www.w3.org/1999/xlink'
-            width='25px'
-            height='25px'
+            width='20px'
+            height='20px'
             viewBox='0 0 96.294 96.294'
             xmlSpace='preserve'
-            style={{ cursor: 'pointer' }}
+            style={{
+                cursor: 'pointer',
+                fill: isClicked ? '#c32d2d' : '#a8a8a8',
+            }}
         >
             <g>
                 <path
