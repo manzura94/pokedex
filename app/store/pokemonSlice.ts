@@ -26,7 +26,7 @@ const initialState: PokemonState = {
 
 export const fetchPokemons = createAsyncThunk('pokemon/fetchPokemons', async (offset: number) => {
     const response = await axios.get(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=10`);
-    console.log("Fetch Response:", response.data);
+    console.log('Fetch Response:', response.data);
     const pokemonDetails = await Promise.all(
         response.data.results.map(async (pokemon: PokemonState) => {
             const res = await axios.get(pokemon.url);
@@ -62,9 +62,6 @@ const pokemonSlice = createSlice({
         removeFavorite: (state: { favorites: PokemonProps[] }, action: PayloadAction<string>) => {
             state.favorites = state.favorites.filter((pokemon) => pokemon.id !== action.payload);
         },
-        resetList: (state: PokemonState) => {
-            state.list = [];
-        },
     },
     extraReducers: (builder: ActionReducerMapBuilder<PokemonState>) => {
         builder
@@ -81,5 +78,5 @@ const pokemonSlice = createSlice({
             });
     },
 });
-export const { setSearchTerm, setSelectedType, setSelectedItem, addFavorite, removeFavorite, resetList } = pokemonSlice.actions;
+export const { setSearchTerm, setSelectedType, setSelectedItem, addFavorite, removeFavorite } = pokemonSlice.actions;
 export default pokemonSlice.reducer;

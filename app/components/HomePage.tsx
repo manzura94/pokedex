@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addFavorite, fetchPokemons, removeFavorite, setSelectedItem, resetList } from '../store/pokemonSlice';
+import { addFavorite, fetchPokemons, removeFavorite, setSelectedItem } from '../store/pokemonSlice';
 import SearchBar from '../components/SearchBar';
 import { RootState, AppDispatch } from '../store';
 import Link from 'next/link';
@@ -25,16 +25,19 @@ const HomePage = () => {
     const [offset, setOffset] = useState(0);
 
     useEffect(() => {
-        dispatch(resetList());
-        setOffset(0);
         dispatch(fetchPokemons(offset));
     }, [dispatch, offset]);
 
-    const loadMore = () => {
-        const newOffset = offset + 10;
-        setOffset(newOffset);
-        dispatch(fetchPokemons(newOffset));
-    };
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 500 && !loading) {
+                setOffset((prevOffset) => prevOffset + 10);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [loading]);
 
     const filteredList = list
         .filter((pokemon: PokemonProps) => pokemon?.name?.includes(searchTerm))
@@ -54,7 +57,7 @@ const HomePage = () => {
         }
     };
 
-    if (loading) {
+    if (loading && offset === 0) {
         return (
             <div className='flex justify-center items-center min-h-screen'>
                 <p className='text-[25px] font-bold'>Loading...</p>
@@ -71,9 +74,9 @@ const HomePage = () => {
                         const isFavorite = favorites.some((fav: PokemonProps) => fav.id === pokemon.id);
 
                         return (
-                            <Link href={`pokemon/${index}`} key={index} passHref>
+                            <Link href={`pokemon/${index}`} key={index} passHref scroll={false}>
                                 <div
-                                    className='p-5 border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer min-w-[250px] m-2'
+                                    className='p-5 border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer min-w-[230px] '
                                     onClick={() => handlePokemonClick(pokemon)}
                                 >
                                     <HeartIcon isClicked={isFavorite} handleLikeClick={(e) => handleLikeClick(e, pokemon)} />
@@ -88,11 +91,11 @@ const HomePage = () => {
                     <p className='col-span-full text-center text-gray-500'>No results found</p>
                 )}
             </div>
-            {filteredList.length ? (
-                <button onClick={loadMore} className='mt-6 px-6 py-2 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600'>
-                    Load More
-                </button>
-            ) : null}
+            {loading && (
+                <div className='flex justify-center items-center w-full py-4'>
+                    <p className='text-[18px] font-bold'>Loading...</p>
+                </div>
+            )}
         </div>
     );
 };
